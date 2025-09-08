@@ -18,9 +18,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
-# os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+# os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+# os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 # Initialize the LLM (Groq LLM)
 # llm = ChatGroq(model="llama-3.1-8b-instant")
@@ -129,6 +129,22 @@ def stream_graph_updates(user_input: str, thread_id: str):
             print("Assistant:", value["messages"][-1].content)
 
 
+def replay_state_history(graph, config):
+    to_replay = None
+    for state in graph.get_state_history(config):
+        print("Num Messages: ", len(state.values["messages"]), "Next: ", state.next)
+        print("-" * 80)
+        if len(state.values["messages"]) == 2:
+            # We are somewhat arbitrarily selecting a specific state based on the number of chat messages in the state.
+            to_replay = state
+        
+    print(to_replay.next)
+    print(to_replay.config)
+    # The `checkpoint_id` in the `to_replay.config` corresponds to a state we've persisted to our checkpointer.
+    for event in graph.stream(None, to_replay.config, stream_mode="values"):
+        if "messages" in event:
+            event["messages"][-1].pretty_print()
+
 def test_human_in_loop():
     '''
         Test the human assistance tool in the graph.
@@ -156,6 +172,7 @@ def test_human_in_loop():
     for event in events:
         if "messages" in event:
             event["messages"][-1].pretty_print()
+    replay_state_history(graph, config)
 
 
 def test_chatbot():
@@ -215,6 +232,6 @@ def custom_state():
     print({k: v for k, v in snapshot.values.items() if k in ("name", "birthday")})
 
 if __name__ == "__main__":
-    # test_human_assistance()
+    test_human_in_loop()
     # test_chatbot()
-    custom_state()
+    # custom_state()
