@@ -1,0 +1,11 @@
+model_list:
+  - model_name: groq-llama
+    litellm_params:
+      model: groq/llama-3.1-8b-instant
+      api_key: os.environ/GROQ_API_KEY
+      supports_function_calling: true  # Enable function calling
+
+# Optional: Add fallback models
+fallbacks:
+  - model_name: groq-llama
+    fallback_models: []  # Add other models here if you have them
