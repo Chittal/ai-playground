@@ -1,0 +1,4 @@
+- Create as many agents as needed
+- Don't over complicate agent state
+- Agent state is only for actively need items. Don't store longer text in Agent state
+- USe tools when needed
