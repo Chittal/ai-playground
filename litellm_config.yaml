@@ -4,6 +4,22 @@ model_list:
       model: groq/llama-3.1-8b-instant
       api_key: os.environ/GROQ_API_KEY
       supports_function_calling: true  # Enable function calling
+  
+  - model_name: ollama/qwen3:1.7b
+    litellm_params:
+      model: ollama/qwen3:1.7b
+      supports_function_calling: true  # Enable function calling
+
+  - model_name: ollama/llama3.2:3b
+    litellm_params:
+      model: ollama/llama3.2:3b
+      supports_function_calling: true  # Enable function calling
+
+  - model_name: openai/gpt-4.1-nano
+    litellm_params:
+      model: openai/gpt-4.1-nano
+      api_key: os.environ/OPENAI_API_KEY
+      supports_function_calling: true  # Enable function calling
 
 # Optional: Add fallback models
 fallbacks:

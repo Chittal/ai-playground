@@ -26,41 +26,41 @@ os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 # llm = ChatGroq(model="llama-3.1-8b-instant")
 llm = init_chat_model("openai:gpt-4.1-nano")
 
-# @langchain_tool
-# def human_assistance(query: str) -> str:
-#     """Request assistance from a human."""
-#     print(f"Requesting human assistance for query: {query}")
-#     human_response = interrupt({"query": query})
-#     print(f"Received human response: {human_response['data']}")
-#     return human_response["data"]
-
 @langchain_tool
-def human_assistance(
-    name: str, birthday: str, tool_call_id: Annotated[str, InjectedToolCallId]
-) -> str:
+def human_assistance(query: str) -> str:
     """Request assistance from a human."""
-    human_response = interrupt(
-        {
-            "question": "Is this correct?",
-            "name": name,
-            "birthday": birthday,
-        },
-    )
-    if human_response.get("correct", "").lower().startswith("y"):
-        verified_name = name
-        verified_birthday = birthday
-        response = "Correct"
-    else:
-        verified_name = human_response.get("name", name)
-        verified_birthday = human_response.get("birthday", birthday)
-        response = f"Made a correction: {human_response}"
+    # print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Requesting human assistance for query: {query}")
+    human_response = interrupt({"query": query})
+    # print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Received human response: {human_response['data']}")
+    return human_response["data"]
 
-    state_update = {
-        "name": verified_name,
-        "birthday": verified_birthday,
-        "messages": [ToolMessage(response, tool_call_id=tool_call_id)],
-    }
-    return Command(update=state_update)
+# @langchain_tool
+# def human_assistance(
+#     name: str, birthday: str, tool_call_id: Annotated[str, InjectedToolCallId]
+# ) -> str:
+#     """Request assistance from a human."""
+#     human_response = interrupt(
+#         {
+#             "question": "Is this correct?",
+#             "name": name,
+#             "birthday": birthday,
+#         },
+#     )
+#     if human_response.get("correct", "").lower().startswith("y"):
+#         verified_name = name
+#         verified_birthday = birthday
+#         response = "Correct"
+#     else:
+#         verified_name = human_response.get("name", name)
+#         verified_birthday = human_response.get("birthday", birthday)
+#         response = f"Made a correction: {human_response}"
+
+#     state_update = {
+#         "name": verified_name,
+#         "birthday": verified_birthday,
+#         "messages": [ToolMessage(response, tool_call_id=tool_call_id)],
+#     }
+#     return Command(update=state_update)
 
 # Initialize Tavily Search tool (For web search)
 tool = TavilySearch(max_results=2) # search results is 2
@@ -130,6 +130,7 @@ def stream_graph_updates(user_input: str, thread_id: str):
 
 
 def replay_state_history(graph, config):
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Replay state history=================================")
     to_replay = None
     for state in graph.get_state_history(config):
         print("Num Messages: ", len(state.values["messages"]), "Next: ", state.next)
@@ -138,8 +139,8 @@ def replay_state_history(graph, config):
             # We are somewhat arbitrarily selecting a specific state based on the number of chat messages in the state.
             to_replay = state
         
-    print(to_replay.next)
-    print(to_replay.config)
+    print("NEXT: ", to_replay.next)
+    print("CONFIG: ", to_replay.config)
     # The `checkpoint_id` in the `to_replay.config` corresponds to a state we've persisted to our checkpointer.
     for event in graph.stream(None, to_replay.config, stream_mode="values"):
         if "messages" in event:
@@ -152,6 +153,7 @@ def test_human_in_loop():
     user_input = "I need some expert guidance for building an AI agent. Could you request assistance for me?"
     config = {"configurable": {"thread_id": "1"}}
 
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Ask the graph=================================")
     events = graph.stream(
         {"messages": [{"role": "user", "content": user_input}]},
         config,
@@ -160,11 +162,13 @@ def test_human_in_loop():
     for event in events:
         if "messages" in event:
             event["messages"][-1].pretty_print()
-
-    human_response = (
-        "We, the experts are here to help! We'd recommend you check out LangGraph to build your agent."
-        " It's much more reliable and extensible than simple autonomous agents."
-    )
+    # replay_state_history(graph, config)
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Waiting for human response===================================")
+    human_response = input("Human: ")
+    # (
+    #     "We, the experts are here to help! We'd recommend you check out LangGraph to build your agent."
+    #     " It's much more reliable and extensible than simple autonomous agents."
+    # )
 
     human_command = Command(resume={"data": human_response})
 
@@ -172,7 +176,7 @@ def test_human_in_loop():
     for event in events:
         if "messages" in event:
             event["messages"][-1].pretty_print()
-    replay_state_history(graph, config)
+    # replay_state_history(graph, config)
 
 
 def test_chatbot():
